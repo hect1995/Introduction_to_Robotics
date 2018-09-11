@@ -1,0 +1,2 @@
+kinematics_assignment_metapackage/kinematics_assignment:kinematics_assignment_metapackage/kinematics_assignment_metapackage:kinematics_assignment_metapackage/lwr_description:ras_lab1/motion_plan:ras_lab1/ras_lab1:ras_lab1/ras_lab1_distance_sensor:ras_lab1/ras_lab1_launch:ras_lab1/ras_lab1_motors:ras_lab1/ras_lab1_msgs:ras_lab1/ras_lab1_world:ras_lab1/sendtwist:ras_msgs
+-DCATKIN_DEVEL_PREFIX=/home/wasp/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/wasp/catkin_ws/install -G Unix Makefiles

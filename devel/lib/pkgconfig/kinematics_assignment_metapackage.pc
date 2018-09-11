@@ -1,0 +1,8 @@
+prefix=/home/wasp/catkin_ws/devel
+
+Name: kinematics_assignment_metapackage
+Description: Description of kinematics_assignment_metapackage
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/wasp/catkin_ws/devel/lib 
+Requires: 

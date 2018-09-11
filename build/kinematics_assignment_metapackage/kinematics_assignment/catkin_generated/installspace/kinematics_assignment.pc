@@ -1,0 +1,8 @@
+prefix=/home/wasp/catkin_ws/install
+
+Name: kinematics_assignment
+Description: Description of kinematics_assignment
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/wasp/catkin_ws/install/lib 
+Requires: 
