@@ -4,13 +4,10 @@
 # hectorec@kth.se
 
 from dubins import Car
-import matplotlib.pyplot as plt
 import random
-import copy
 import math
 import numpy as np
 from numpy import linalg as LA
-import time
 
 car_my = Car()
 
@@ -31,27 +28,20 @@ class RRT():
     RRT Node
     """
     def __init__(self, start, goal, obstacleList,
-                 randArea, expandDis=0.5, goalSampleRate=10, maxIter=500):
-        """
-        Setting Parameter
-        start:The position where the robot will be stablished at the begining [x,y]
-        goal:The position that wants to reach at the end [x,y]
-        obstacleList:obstacle Positions [[x,y,size],...]
-        randArea:Ramdom Samping Area [min,max]
-        """
+                 randArea):
+
         self.start = Node(start[0], start[1])
         self.end = Node(goal[0], goal[1])
+        self.vertexList = [self.start]
         self.minrandx = randArea[0]
         self.maxrandx = randArea[1]
         self.minrandy = randArea[2]
         self.maxrandy = randArea[3]
-        self.expandDis = expandDis
-        self.goalSampleRate = goalSampleRate
-        self.maxIter = maxIter
+        self.expandDis = 0.5
+        self.goalSampleRate = 10
         self.obstacleList = obstacleList
 
     def Planning(self):
-        self.vertexList = [self.start]
         while True:
             # Get the random point
             if random.randint(0, 100) > self.goalSampleRate:
@@ -81,12 +71,11 @@ class RRT():
             x = []
             y = []
             theta = []
+            x_use = nearestNode.x
+            y_use = nearestNode.y
+            theta_use = nearestNode.theta
             while (crash == False) and (counter_straight<10):
-                if (counter_straight == 0):
-                    x_aux, y_aux, theta_aux = car_my.step(nearestNode.x, nearestNode.y, nearestNode.theta, phi)
-
-                else:
-                    x_aux, y_aux, theta_aux = car_my.step(x_aux, y_aux, theta_aux, phi)
+                x_aux, y_aux, theta_aux = car_my.step(x_use, y_use, theta_use, phi)
 
                 x.append(x_aux)
                 y.append(y_aux)
@@ -99,11 +88,15 @@ class RRT():
                     crash = True
                     counter_straight = counter_straight//2
 
+                x_use = x_aux
+                y_use = y_aux
+                theta_use = theta_aux
+
 
             if counter_straight>0:
                 new_node = Node(x=x[counter_straight-1], y=y[counter_straight-1], parent=nind, theta=theta[counter_straight-1])
                 new_node.phi = phi
-                new_node.dt = (counter_straight-1)*car_my.dt + nearestNode.dt
+                new_node.dt = counter_straight*car_my.dt + nearestNode.dt
 
                 self.vertexList.append(new_node)
                 print("\nlength: {}\n".format(len(self.vertexList)))
@@ -113,11 +106,7 @@ class RRT():
                 d = math.sqrt(dx * dx + dy * dy)
                 if d <= self.expandDis:
                     print("Goal!!")
-                    time.sleep(1)
-                    print("\n{}\n{}\n{}\n".format(new_node.x, new_node.y, nind))
-                    #time.sleep(5)
                     break
-            #self.DrawGraph(rnd)
 
         path = []
         times = []
@@ -132,32 +121,7 @@ class RRT():
 
         path_toreturn = path[::-1]
         time_toreturn = times[::-1]
-
-
         return path_toreturn, time_toreturn
-
-    def DrawGraph(self, rnd=None):
-        """
-        Draw Graph
-        """
-        plt.clf()
-        if rnd is not None:
-            plt.plot(rnd[0], rnd[1], "^k")
-        for node in self.vertexList:
-            if node.parent is not None:
-                plt.plot([node.x, self.vertexList[node.parent].x], [
-                    node.y, self.vertexList[node.parent].y], "-g")
-
-        for (ox, oy, size) in self.obstacleList:
-            plt.plot(ox, oy, "ok", ms=30 * size)
-
-        plt.plot(self.start.x, self.start.y, "xr")
-        plt.plot(self.end.x, self.end.y, "xr")
-        plt.axis([self.minrandx, self.maxrandx, self.minrandy, self.maxrandy])
-        plt.grid(True)
-        plt.pause(0.01)
-
-
 
     def GetNearestListIndex(self, rnd):
         dlist = [(node.x - rnd[0]) ** 2 + (node.y - rnd[1])
@@ -173,13 +137,13 @@ class RRT():
             d = math.sqrt(dx * dx + dy * dy)
             if d <= radius+0.1:
                 return False  # collision
-            if x >= self.maxrandx-0.1:
-                return False
-            if y >= self.maxrandy-0.1:
-                return False
+        if x >= self.maxrandx-0.1:
+            return False
+        if y >= self.maxrandy-0.1:
+            return False
 
-            if y < self.minrandy+0.1:
-                return False
+        if y < self.minrandy+0.1:
+            return False
 
         return True  # safe
 
@@ -196,8 +160,5 @@ def solution(car):
 
     print("\nPath\n", controls)
     print("\nTimes\n", times)
-
-
-    ''' <<< write your code below >>> '''
 
     return controls, times
