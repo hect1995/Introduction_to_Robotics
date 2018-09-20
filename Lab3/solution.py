@@ -37,7 +37,7 @@ class RRT():
         self.maxrandx = randArea[1]
         self.minrandy = randArea[2]
         self.maxrandy = randArea[3]
-        self.expandDis = 0.5
+        self.expandDis = 0.85
         self.goalSampleRate = 10
         self.obstacleList = obstacleList
 
@@ -74,24 +74,18 @@ class RRT():
             x_use = nearestNode.x
             y_use = nearestNode.y
             theta_use = nearestNode.theta
-            while (crash == False) and (counter_straight<10):
-                x_aux, y_aux, theta_aux = car_my.step(x_use, y_use, theta_use, phi)
+            while (crash == False) and (counter_straight<15):
+                x_use, y_use, theta_use = car_my.step(x_use, y_use, theta_use, phi)
 
-                x.append(x_aux)
-                y.append(y_aux)
-                theta.append(theta_aux)
+                x.append(x_use)
+                y.append(y_use)
+                theta.append(theta_use)
 
                 counter_straight = counter_straight + 1
 
-
-                if not self.__CollisionCheck(x_aux, y_aux):
+                if not self.__CollisionCheck(x_use, y_use):
                     crash = True
-                    counter_straight = counter_straight//2
-
-                x_use = x_aux
-                y_use = y_aux
-                theta_use = theta_aux
-
+                    counter_straight = counter_straight-1#//2
 
             if counter_straight>0:
                 new_node = Node(x=x[counter_straight-1], y=y[counter_straight-1], parent=nind, theta=theta[counter_straight-1])
@@ -99,13 +93,10 @@ class RRT():
                 new_node.dt = counter_straight*car_my.dt + nearestNode.dt
 
                 self.vertexList.append(new_node)
-                print("\nlength: {}\n".format(len(self.vertexList)))
-
                 dx = new_node.x - self.end.x
                 dy = new_node.y - self.end.y
                 d = math.sqrt(dx * dx + dy * dy)
                 if d <= self.expandDis:
-                    print("Goal!!")
                     break
 
         path = []
@@ -113,15 +104,12 @@ class RRT():
         lastIndex = len(self.vertexList) - 1
         while self.vertexList[lastIndex].parent is not None: # we start from the goalnode
             node = self.vertexList[lastIndex]
-            path.append(node.phi)
-            times.append(node.dt)
+            path.insert(0,node.phi)
+            times.insert(0,node.dt)
             lastIndex = node.parent
 
-        times.append(0)
-
-        path_toreturn = path[::-1]
-        time_toreturn = times[::-1]
-        return path_toreturn, time_toreturn
+        times.insert(0,0) # time 0 at 0 position
+        return path, times
 
     def GetNearestListIndex(self, rnd):
         dlist = [(node.x - rnd[0]) ** 2 + (node.y - rnd[1])
@@ -130,19 +118,16 @@ class RRT():
         return minind
 
     def __CollisionCheck(self, x, y): # x and y are the coordinates
-
         for (ox, oy, radius) in self.obstacleList:
             dx = ox - x
             dy = oy - y
             d = math.sqrt(dx * dx + dy * dy)
             if d <= radius+0.1:
                 return False  # collision
-        if x >= self.maxrandx-0.1:
-            return False
-        if y >= self.maxrandy-0.1:
+        if not (self.minrandx <= x <= self.maxrandx-0.1):
             return False
 
-        if y < self.minrandy+0.1:
+        if not (self.minrandy+0.1 <= y <= self.maxrandy-0.1):
             return False
 
         return True  # safe
@@ -154,11 +139,7 @@ def solution(car):
     position_start = [car_my.x0, car_my.y0]
     position_goal = [car_my.xt, car_my.yt]
 
-
     my_rrt = RRT(position_start, position_goal, car_my.obs, randArea = [car_my.xlb, car_my.xub, car_my.ylb, car_my.yub])
     controls, times = my_rrt.Planning()
-
-    print("\nPath\n", controls)
-    print("\nTimes\n", times)
 
     return controls, times
