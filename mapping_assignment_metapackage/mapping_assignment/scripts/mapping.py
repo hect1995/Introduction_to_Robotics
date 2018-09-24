@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 """
-    # {student full name}
+    # Hector Esteban Cabezos
     # {student id}
-    # {student email}
+    # hectorec@kth.se
 """
 
 # Python standard library
@@ -13,15 +13,11 @@ from math import cos, sin, atan2, fabs
 import numpy as np
 
 # "Local version" of ROS messages
-from local.geometry_msgs import PoseStamped, Quaternion, Point
+from local.geometry_msgs import PoseStamped, Quaternion
 from local.sensor_msgs import LaserScan
 from local.map_msgs import OccupancyGridUpdate
 
 from grid_map import GridMap
-
-import rospy
-
-i = 0
 
 
 class Mapping:
@@ -168,12 +164,9 @@ class Mapping:
         resolution = grid_map.get_resolution()
 
         for i, range_value in enumerate(scan.ranges):
-            print("/n/n{}/n/n".format(i))
-            print("/n/n{}/n/n".format(range_value))
-
             angle  = scan.angle_min + i*scan.angle_increment + robot_yaw
 
-            if (scan.range_min <= range_value <= scan.range_max):
+            if (scan.range_min < range_value < scan.range_max):
                 x_laser = range_value*cos(angle)
                 y_laser = range_value*sin(angle)
                 x_total = x_laser + pose.pose.position.x - origin.position.x
