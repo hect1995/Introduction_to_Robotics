@@ -1,0 +1,8 @@
+prefix=/home/wasp/catkin_ws/devel
+
+Name: turtlebot3_description
+Description: Description of turtlebot3_description
+Version: 1.0.0
+Cflags: 
+Libs: -L/home/wasp/catkin_ws/devel/lib 
+Requires: urdf xacro

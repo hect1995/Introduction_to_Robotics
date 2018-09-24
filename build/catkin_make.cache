@@ -1,0 +1,2 @@
+mapping_assignment:mapping_assignment_metapackage:turtlebot3_description
+-DCATKIN_DEVEL_PREFIX=/home/wasp/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/wasp/catkin_ws/install -G Unix Makefiles
