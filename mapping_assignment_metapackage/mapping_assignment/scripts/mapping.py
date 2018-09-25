@@ -11,6 +11,7 @@ from math import cos, sin, atan2, fabs
 
 # Numpy
 import numpy as np
+import math
 
 # "Local version" of ROS messages
 from local.geometry_msgs import PoseStamped, Quaternion
@@ -163,6 +164,11 @@ class Mapping:
         y_scanned = []
         resolution = grid_map.get_resolution()
 
+        max_indexx = -999
+        max_indexy = -999
+        min_indexx = 999
+        min_indexy = 999
+
         for i, range_value in enumerate(scan.ranges):
             angle  = scan.angle_min + i*scan.angle_increment + robot_yaw
 
@@ -172,12 +178,27 @@ class Mapping:
                 x_total = x_laser + pose.pose.position.x - origin.position.x
                 y_total = y_laser + pose.pose.position.y - origin.position.y
                 x_index = int(x_total/resolution)
+                if (x_index > max_indexx):
+                    max_indexx = x_index
+                if (x_index < min_indexx):
+                    min_indexx = x_index
                 y_index = int(y_total/resolution)
+                if (y_index > max_indexy):
+                    max_indexy = y_index
+                if (y_index < min_indexy):
+                    min_indexy = y_index
 
                 self.add_to_map(grid_map, x_index, y_index, self.occupied_space)
-
-
-
+        
+                ## PART E
+                x_total_min = pose.pose.position.x - origin.position.x
+                y_total_min = pose.pose.position.y - origin.position.y
+                x_index_min = int(y_total_min/resolution)
+                y_index_min = int(y_total_min/resolution)
+                cells_free = self.raytrace([x_index_min, y_index_min],[x_index, y_index])
+                #print("{}".format(len(cells_free)))
+                for point in cells_free:
+                    self.add_to_map(grid_map, point[0], point[1], self.free_space)
 
         """
         For C only!
@@ -186,15 +207,18 @@ class Mapping:
         # Only get the part that has been updated
         update = OccupancyGridUpdate()
         # The minimum x index in 'grid_map' that has been updated
-        update.x = 0#pose.position.x + scan.range_min*cos(scan.angle_min + robot_yaw)
+        update.x = min_indexx
         # The minimum y index in 'grid_map' that has been updated
-        update.y = 0#pose.position.y + scan.range_min*sin(scan.angle_min + robot_yaw)
+        update.y = min_indexy
         # Maximum x index - minimum x index + 1
-        update.width = 0
+        update.width = max_indexx - update.x + 1
         # Maximum y index - minimum y index + 1
-        update.height = 0
+        update.height = max_indexy - update.y + 1
         # The map data inside the rectangle, in row-major order.
         update.data = []
+        for j in range(update.height):
+            for i in range(update.width):
+                update.data.append(grid_map[max_indexy-j, i])
 
         # Return the updated map together with only the
         # part of the map that has been updated
@@ -229,6 +253,20 @@ class Mapping:
         """
         Fill in your solution here
         """
+        ## PART E
+        resolution = grid_map.get_resolution()
+        height = grid_map.get_height()
+        width = grid_map.get_width()
+        for i in range(height):
+            for j in range(width):
+                if (grid_map[i,j] == self.occupied_space):
+                    radius_int = int(self.radius/resolution)
+                    for y_coord in  range(i-radius_int, i+radius_int):
+                        for x_coord in  range(j-radius_int, j+radius_int):
+                            if (math.sqrt(y_coord*y_coord + x_coord*x_coord) <= radius_int) and (grid_map[y_coord, x_coord]!=self.occupied_space):
+                                self.add_to_map(grid_map, y_coord, x_coord, self.c_space)
+
+
 
         
         # Return the inflated map
