@@ -193,7 +193,7 @@ class Mapping:
                 ## PART E
                 x_total_min = pose.pose.position.x - origin.position.x
                 y_total_min = pose.pose.position.y - origin.position.y
-                x_index_min = int(y_total_min/resolution)
+                x_index_min = int(x_total_min/resolution)
                 y_index_min = int(y_total_min/resolution)
                 cells_free = self.raytrace([x_index_min, y_index_min],[x_index, y_index])
                 #print("{}".format(len(cells_free)))
@@ -218,7 +218,7 @@ class Mapping:
         update.data = []
         for j in range(update.height):
             for i in range(update.width):
-                update.data.append(grid_map[max_indexy-j, i])
+                update.data.append(grid_map[j+update.y, i+update.x])
 
         # Return the updated map together with only the
         # part of the map that has been updated
@@ -260,7 +260,7 @@ class Mapping:
         for i in range(height):
             for j in range(width):
                 if (grid_map[i,j] == self.occupied_space):
-                    radius_int = int(self.radius/resolution)
+                    radius_int = self.radius
                     for y_coord in  range(i-radius_int, i+radius_int):
                         for x_coord in  range(j-radius_int, j+radius_int):
                             if (math.sqrt(y_coord*y_coord + x_coord*x_coord) <= radius_int) and (grid_map[y_coord, x_coord]!=self.occupied_space):
