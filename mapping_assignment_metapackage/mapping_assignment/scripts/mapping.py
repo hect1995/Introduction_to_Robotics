@@ -169,10 +169,12 @@ class Mapping:
         min_indexx = 999
         min_indexy = 999
 
+        occupied = []
         for i, range_value in enumerate(scan.ranges):
             angle  = scan.angle_min + i*scan.angle_increment + robot_yaw
 
             if (scan.range_min < range_value < scan.range_max):
+                ## PART E
                 x_laser = range_value*cos(angle)
                 y_laser = range_value*sin(angle)
                 x_total = x_laser + pose.pose.position.x - origin.position.x
@@ -187,18 +189,20 @@ class Mapping:
                     max_indexy = y_index
                 if (y_index < min_indexy):
                     min_indexy = y_index
-
-                self.add_to_map(grid_map, x_index, y_index, self.occupied_space)
-        
-                ## PART E
+                occupied.append([x_index, y_index])
                 x_total_min = pose.pose.position.x - origin.position.x
                 y_total_min = pose.pose.position.y - origin.position.y
                 x_index_min = int(x_total_min/resolution)
                 y_index_min = int(y_total_min/resolution)
                 cells_free = self.raytrace([x_index_min, y_index_min],[x_index, y_index])
-                #print("{}".format(len(cells_free)))
                 for point in cells_free:
+                    #if (grid_map[point[0], point[1]] != self.c_space):
                     self.add_to_map(grid_map, point[0], point[1], self.free_space)
+
+        for obstacle in occupied:
+            self.add_to_map(grid_map, obstacle[0], obstacle[1], self.occupied_space)
+        
+
 
         """
         For C only!
@@ -254,20 +258,20 @@ class Mapping:
         Fill in your solution here
         """
         ## PART E
-        resolution = grid_map.get_resolution()
-        height = grid_map.get_height()
+        height = grid_map.get_height() # 300x300
         width = grid_map.get_width()
         for i in range(height):
             for j in range(width):
                 if (grid_map[i,j] == self.occupied_space):
                     radius_int = self.radius
-                    for y_coord in  range(i-radius_int, i+radius_int):
-                        for x_coord in  range(j-radius_int, j+radius_int):
-                            if (math.sqrt(y_coord*y_coord + x_coord*x_coord) <= radius_int) and (grid_map[y_coord, x_coord]!=self.occupied_space):
-                                self.add_to_map(grid_map, y_coord, x_coord, self.c_space)
+                    for y_coord in  range(i-radius_int, i+radius_int+1):
+                        for x_coord in range(j-radius_int, j+radius_int+1):
+                            if (self.is_in_bounds(grid_map, x_coord, y_coord)):
+                                print("\n{}\n".format(math.sqrt((y_coord-i)*(y_coord-i) + (x_coord-j)*(x_coord-j))))
+                                if (math.sqrt((y_coord-i)*(y_coord-i) + (x_coord-j)*(x_coord-j)) <= radius_int):
+                                    if grid_map[y_coord, x_coord] in [self.free_space, self.unknown_space]:
+                                        #print("\n{}\n{}\n".format(y_coord, x_coord))
+                                        self.add_to_map(grid_map, y_coord, x_coord, self.c_space)
 
-
-
-        
         # Return the inflated map
         return grid_map
